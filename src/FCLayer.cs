@@ -11,7 +11,11 @@ namespace neural_network
             this.OutputSize = outputSize;
             this.BatchSize = batchSize;
 
+            this.Input = Matrix<double>.Build.Dense(this.BatchSize, this.InputSize);
             this.Weights = Matrix<double>.Build.Random(this.InputSize, this.OutputSize).Subtract(0.5);
+            this.Output = Matrix<double>.Build.Dense(this.BatchSize, this.OutputSize);
+            this.Bias = Matrix<double>.Build.Dense(this.BatchSize, this.OutputSize);
+
             InitializeBias(this.BatchSize);
         }
 
@@ -20,19 +24,17 @@ namespace neural_network
            this.Bias = Matrix<double>.Build.Random(batchSize, this.OutputSize).Subtract(0.5); 
         }
 
-        public int InputSize { get; }
-        public int OutputSize { get; }
-        public int BatchSize { get; }
+        // [BatchSize, InputSize]
+        public Matrix<double> Input { get; set; }
 
         // [InputSize, OutputSize]
         public Matrix<double> Weights { get; set; }
+
+        // [BatchSize, OutputSize]
+        public Matrix<double> Output { get; set; }
+        
         // [BatchSize, OutputSize]
         public Matrix<double> Bias { get; set; }
-
-        // [BatchSize, InputSize]
-        public Matrix<double> Input { get; set; }
-        // [BatchSize, InputSize]
-        public Matrix<double> Output { get; set; }
 
         public override Matrix<double> ForwardPropagation(Matrix<double> input)
         {
@@ -45,10 +47,10 @@ namespace neural_network
             // [BatchSize, InputSize]
             this.Input = input.Clone();
 
-            // [BatchSize, InputSize] = ([BatchSize, InputSize] * [InputSize, OutputSize]) + [BatchSize, OutputSize]
+            // [BatchSize, OutputSize] = ([BatchSize, InputSize] * [InputSize, OutputSize]) + [BatchSize, OutputSize]
             this.Output = this.Input.Multiply(this.Weights).Add(this.Bias);
 
-            // [BatchSize, InputSize]
+            // [BatchSize, OutputSize]
             return this.Output;
         }
 

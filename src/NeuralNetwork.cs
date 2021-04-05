@@ -41,16 +41,57 @@ namespace neural_network
             return samples;
         }
 
-        public void Fit(Matrix<double>[] xTrain, Matrix<double>[] yTrain, int epochs, double learningRate)
+        private void PrintNetworkLayout()
+        {
+            Console.WriteLine("network layout:");
+            for (int i = 0; i < this.Layers.Count(); i++)
+            {
+                var layer = this.Layers.ElementAt(i);
+
+                if (layer is ActivationLayer activationLayer)
+                {
+                    Console.WriteLine($"layer {i}: activation");
+                    continue;
+                }
+
+                if (layer is FCLayer fcLayer)
+                {
+                    Console.WriteLine($"layer {i}: fully connected");
+                    Console.WriteLine($"  in  := {fcLayer.Input.RowCount}x{fcLayer.Input.ColumnCount}");
+                    Console.WriteLine($"  w   := {fcLayer.Weights.RowCount}x{fcLayer.Weights.ColumnCount}");
+                    Console.WriteLine($"  out := {fcLayer.Output.RowCount}x{fcLayer.Output.ColumnCount}");
+                    Console.WriteLine($"  b   := {fcLayer.Bias.RowCount}x{fcLayer.Bias.ColumnCount}");
+                }
+            }
+        }
+
+        public void Fit(Matrix<double>[] xTrain, Matrix<double>[] yTrain, int epochs, double learningRate,
+            int printEveryEpoch = 1)
         {
             int samples = xTrain.Length;
-            if (samples <= 0) return;
+            if (samples <= 0 || yTrain.Length != samples)
+            {
+                Console.WriteLine("got no samples OR x/y length mismatch..");
+                return;
+            }
 
             int batchSize = xTrain[0].RowCount;
             Console.WriteLine($"epochs: {epochs}");
             Console.WriteLine($"learning rate: {learningRate}");
             Console.WriteLine($"batch size: {batchSize}");
+            Console.WriteLine();
+
             Console.WriteLine($"samples: {samples}");
+            Console.WriteLine($"  x: {xTrain.Length}");
+            Console.WriteLine($"    size: {xTrain[0].RowCount}, {xTrain[0].ColumnCount}");
+            Console.WriteLine($"  y: {yTrain.Length}");
+            Console.WriteLine($"    size: {yTrain[0].RowCount}, {yTrain[0].ColumnCount}");
+            Console.WriteLine("--------------");
+            Console.WriteLine();
+
+            PrintNetworkLayout();
+            Console.WriteLine("--------------");
+            Console.WriteLine();
 
             for (int i = 0; i < epochs; i++)
             {
@@ -77,7 +118,7 @@ namespace neural_network
 
                 err /= samples;
 
-                if (i == 0 || i == epochs -1 || i % 50 == 0)
+                if (i == 0 || i == epochs -1 || i % printEveryEpoch == 0)
                 {
                     Console.WriteLine($"epoch {i}/{epochs}: err={err}");
                 }

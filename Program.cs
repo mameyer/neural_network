@@ -1,48 +1,58 @@
 ﻿using System;
 using MathNet.Numerics.LinearAlgebra;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace neural_network
 {
     class Program
     {
-        static void Main(string[] args)
+        public static void Xor(bool batch = true)
         {
-            // var xTrain = new Matrix<double>[]
-            // {
-            //     Matrix<double>.Build.DenseOfArray(new double[,] { {0, 0}}),
-            //     Matrix<double>.Build.DenseOfArray(new double[,] { {0, 1}}),
-            //     Matrix<double>.Build.DenseOfArray(new double[,] { {1, 0}}),
-            //     Matrix<double>.Build.DenseOfArray(new double[,] { {1, 1}})
-            // };
-
-            // var yTrain = new Matrix<double>[]
-            // {
-            //     Matrix<double>.Build.DenseOfArray(new double[,] { {0} }),
-            //     Matrix<double>.Build.DenseOfArray(new double[,] { {1} }),
-            //     Matrix<double>.Build.DenseOfArray(new double[,] { {1} }),
-            //     Matrix<double>.Build.DenseOfArray(new double[,] { {0} })
-            // };
-
-            var xTrain = new Matrix<double>[]
+            Matrix<double>[] xTrain, yTrain;
+            
+            if (batch)
             {
-                Matrix<double>.Build.DenseOfArray(new double[,]
+                xTrain = new Matrix<double>[]
                 {
-                    {0, 0},
-                    {0, 1},
-                    {1, 0},
-                    {1, 1}
-                })
-            };
+                    Matrix<double>.Build.DenseOfArray(new double[,]
+                    {
+                        {0, 0},
+                        {0, 1},
+                        {1, 0},
+                        {1, 1}
+                    })
+                };
 
-            var yTrain = new Matrix<double>[]
+                yTrain = new Matrix<double>[]
+                {
+                    Matrix<double>.Build.DenseOfArray(new double[,] { 
+                        {0},
+                        {1},
+                        {1},
+                        {0}
+                    })
+                };
+            }
+            else
             {
-                Matrix<double>.Build.DenseOfArray(new double[,] { 
-                    {0},
-                    {1},
-                    {1},
-                    {0}
-                })
-            };
+                xTrain = new Matrix<double>[]
+                {
+                    Matrix<double>.Build.DenseOfArray(new double[,] { {0, 0}}),
+                    Matrix<double>.Build.DenseOfArray(new double[,] { {0, 1}}),
+                    Matrix<double>.Build.DenseOfArray(new double[,] { {1, 0}}),
+                    Matrix<double>.Build.DenseOfArray(new double[,] { {1, 1}})
+                };
+
+                yTrain = new Matrix<double>[]
+                {
+                    Matrix<double>.Build.DenseOfArray(new double[,] { {0} }),
+                    Matrix<double>.Build.DenseOfArray(new double[,] { {1} }),
+                    Matrix<double>.Build.DenseOfArray(new double[,] { {1} }),
+                    Matrix<double>.Build.DenseOfArray(new double[,] { {0} })
+                };
+            }
+
 
             NeuralNetwork neuralNetwork = new NeuralNetwork();
 
@@ -61,6 +71,46 @@ namespace neural_network
             {
                 Console.WriteLine($"pred: {result[i].ToString()}");
             }
+        }
+
+        public static void Mnist(int maxSamples = 1000)
+        {
+            NeuralNetwork neuralNetwork = new NeuralNetwork();
+
+            int batchSize = 1;
+
+            neuralNetwork.Add(new FCLayer(28*28, 100, batchSize));
+            neuralNetwork.Add(new ActivationLayer(new TanhActivationFunction()));
+            neuralNetwork.Add(new FCLayer(100, 50, batchSize));
+            neuralNetwork.Add(new ActivationLayer(new TanhActivationFunction()));
+            neuralNetwork.Add(new FCLayer(50, 10, batchSize));
+            neuralNetwork.Add(new ActivationLayer(new TanhActivationFunction()));
+
+            var xTrain = new List<Matrix<double>>();
+            var yTrain = new List<Matrix<double>>();
+
+            int samples = 0;
+            foreach (var image in mnist.MnistLoader.ReadTrainingData())
+            {
+                xTrain.Add(image.Data); 
+                yTrain.Add(image.Label);
+
+                samples++;
+                if (samples >= maxSamples) break;
+            }
+
+            neuralNetwork.Use(new MSELossFunction());
+            neuralNetwork.Fit(xTrain.ToArray(), yTrain.ToArray(), 50, 0.1);
+        }
+
+        static void Main(string[] args)
+        {
+            Console.WriteLine("xor..");
+            Xor();
+            Console.WriteLine();
+
+            Console.WriteLine("mnist..");
+            Mnist();
         }
     }
 }
